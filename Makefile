@@ -102,7 +102,7 @@ ifeq ($(MACHINE),x86_64)
   # LDLIBS flag
   #---------------------
   # for those who want to use compiled LAPACK, Libxc and FFTW3 packages.
-  LDLIBS = -L${LAPACK_DIR} -llapack -lrefblas -L${XC_DIR}/lib/ -lxcf90 -lxc -L${FFTW_DIR}/lib -lfftw3 -lm 
+  LDLIBS = -L${LAPACK_DIR} -llapack -lrefblas -L${XC_DIR}/lib/ -lxcf03 -lxc -L${FFTW_DIR}/lib -lfftw3 -lm 
 
 
 #----------------------------------------------------------------------------------

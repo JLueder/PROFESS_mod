@@ -420,9 +420,9 @@ SUBROUTINE PBE_LibXC(rho, potential, energy)
   USE CellInfo, ONLY: numSpin 
   ! Number of spins in calculation (1 or 2) 
  
-  USE xc_f90_types_m
-  USE xc_f90_lib_m
-  USE libxc_funcs_m
+  !  USE xc_f90_types_m
+  USE xc_f03_lib_m
+  !  USE libxc_funcs_m
 
   IMPLICIT NONE
 
@@ -460,12 +460,18 @@ SUBROUTINE PBE_LibXC(rho, potential, energy)
   REAL(KIND=DP),DIMENSION(size(rho,1),size(rho,2),size(rho,3),size(rho,4),4):: rhonow     
   REAL(KIND=DP)::rhotmp(size(rho,4)),vctmp(size(rho,4)),vxtmp(size(rho,4))
   REAL(KIND=DP)::sigmatmp(3),vxsigmatmp(3),vcsigmatmp(3)
-  REAL(KIND=DP)::extmp,ectmp
+!  REAL(KIND=DP)::extmp,ectmp
+ REAL(KIND=DP), DIMENSION(1) :: extmp,ectmp
 
   INTEGER:: i,j,k,ispin
-  
-  TYPE(xc_f90_pointer_t) :: x_func, c_func
-  TYPE(xc_f90_pointer_t) :: x_info, c_info
+  !INTEGER*8:: np
+  !np=1
+
+  !TYPE(xc_f90_pointer_t) :: x_func, c_func
+  !TYPE(xc_f90_pointer_t) :: x_info, c_info
+
+  TYPE(xc_f03_func_t) :: x_func, c_func
+  TYPE(xc_f03_func_info_t) :: x_info, c_info
 
   !! >> FUNCTION << !!
      
@@ -531,19 +537,32 @@ SUBROUTINE PBE_LibXC(rho, potential, energy)
   Endif
   
   !use libxc to get dE/drho_up/dn and dE/dsigma
-  call xc_f90_func_init(x_func, x_info, XC_GGA_X_PBE, numspin)
-  call xc_f90_func_init(c_func, c_info, XC_GGA_C_PBE, numspin)
-  
+  ! call xc_f90_func_init(xc_func, xc_info, func_id, XC_UNPOLARIZED)
+!  call xc_f03_func_init(x_func, x_info, XC_GGA_X_PBE, numspin)
+!  call xc_f03_func_init(c_func, c_info, XC_GGA_C_PBE, numspin)
+  call xc_f03_func_init(x_func, XC_GGA_X_PBE, numspin)
+  call xc_f03_func_init(c_func, XC_GGA_C_PBE, numspin)
+ 
+
+  x_info = xc_f03_func_get_info(x_func)
+  c_info = xc_f03_func_get_info(c_func)
+
+
   ! JMD: it may be possible to get more speed out of this by reordering the loops.
   do k = 1,size(rho,3)
       do j = 1,size(rho,2)
           do i = 1,size(rho,1)
               rhotmp = rho(i,j,k,:)
               sigmatmp = sigma(i,j,k,:)
-              call xc_f90_gga_exc_vxc(x_func,1,rhotmp(1),sigmatmp(1),extmp,vxtmp(1),vxsigmatmp(1))
-              call xc_f90_gga_exc_vxc(c_func,1,rhotmp(1),sigmatmp(1),ectmp,vctmp(1),vcsigmatmp(1))
+
+              !call xc_f90_gga_exc_vxc(x_func,1,rhotmp(1),sigmatmp(1),extmp,vxtmp(1),vxsigmatmp(1))
+              !call xc_f90_gga_exc_vxc(c_func,1,rhotmp(1),sigmatmp(1),ectmp,vctmp(1),vcsigmatmp(1))
+
+              call xc_f03_gga_exc_vxc(x_func,INT8(1),rhotmp(1),sigmatmp(1),extmp,vxtmp(1),vxsigmatmp(1))
+              call xc_f03_gga_exc_vxc(c_func,INT8(1),rhotmp(1),sigmatmp(1),ectmp,vctmp(1),vcsigmatmp(1))
               
-              excpbe(i,j,k) =  extmp + ectmp
+              !excpbe(i,j,k) =  extmp + ectmp
+              excpbe(i,j,k) =  extmp(1) + ectmp(1)
               depsxc(i,j,k,1) = vxtmp(1) + vctmp(1)
          
               If(numSpin==1) then
